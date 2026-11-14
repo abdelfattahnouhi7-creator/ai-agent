@@ -1,5 +1,7 @@
 import importlib.util
+import math
 from pathlib import Path
+
 
 def load_brick_func(brick_name, func_name):
     brick_path = Path("bricks") / f"{brick_name}.py"
@@ -10,6 +12,7 @@ def load_brick_func(brick_name, func_name):
     spec.loader.exec_module(module)
     return getattr(module, func_name)
 
+
 def run_impact_audit():
     audit_suite = [
         {
@@ -19,7 +22,7 @@ def run_impact_audit():
                 ({"nums": [10, 20, 30]}, 20.0),
                 ({"nums": [5]}, 5.0),
                 ({"nums": (2, 4, 6)}, 4.0),
-            ]
+            ],
         },
         {
             "id": "brick-002",
@@ -28,7 +31,7 @@ def run_impact_audit():
                 ({"a": 10, "b": 2}, 5.0),
                 ({"a": 5, "b": 0}, ValueError),
                 ({"a": "10", "b": 2}, ValueError),
-            ]
+            ],
         },
         {
             "id": "brick-003",
@@ -38,7 +41,7 @@ def run_impact_audit():
                 ({"part": 10, "total": 0}, ValueError),
                 ({"part": 120, "total": 100}, ValueError),
                 ({"part": -5, "total": 100}, ValueError),
-            ]
+            ],
         },
         {
             "id": "brick-004",
@@ -48,30 +51,50 @@ def run_impact_audit():
                 ({"scores": []}, ValueError),
                 ({"scores": [110, 120]}, ValueError),
                 ({"scores": [-20, 10]}, ValueError),
-            ]
-        }
+            ],
+        },
+        {
+            "id": "brick-005",
+            "func_name": "safe_clean_price",
+            "tests": [
+                ({"raw_price": "100 DH"}, 100.0),
+                ({"raw_price": "100,50"}, 100.5),
+                ({"raw_price": ""}, ValueError),
+                ({"raw_price": "-50 DH"}, ValueError),
+            ],
+        },
+        {
+            "id": "brick-006",
+            "func_name": "safe_total_with_discount",
+            "tests": [
+                ({"raw_price": "200 DH", "discount_percent": 20}, 160.0),
+                ({"raw_price": "200,50", "discount_percent": 10}, 180.45),
+                ({"raw_price": "-100 DH", "discount_percent": 15}, ValueError),
+                ({"raw_price": "200 DH", "discount_percent": 120}, ValueError),
+            ],
+        },
     ]
 
     total_passed = 0
     total_tests = 0
     results_summary = []
 
-    print("=" * 60)
-    print("🚀 بدء نظام تدقيق وتشغيل اللبنات (IMPACT Audit System - V2)")
-    print("=" * 60)
+    print("=" * 65)
+    print("🚀 بدء نظام تدقيق وتشغيل اللبنات (IMPACT Audit System - Final)")
+    print("=" * 65)
 
     for brick in audit_suite:
         b_id = brick["id"]
         f_name = brick["func_name"]
         tests = brick["tests"]
-        
+
         passed_count = 0
         brick_failures = []
 
         try:
             func = load_brick_func(b_id, f_name)
         except Exception as e:
-            results_summary.append((b_id, 0, len(tests), [f"فشل في التحميل: {e}"]))
+            results_summary.append((b_id, 0, len(tests), f"فشل في التحميل: {e}"))
             total_tests += len(tests)
             continue
 
@@ -79,35 +102,42 @@ def run_impact_audit():
             total_tests += 1
             try:
                 res = func(**kwargs)
-                if res == expected:
+                is_match = (
+                    isinstance(res, (int, float))
+                    and isinstance(expected, (int, float))
+                    and math.isclose(res, expected, rel_tol=1e-9)
+                ) or (res == expected)
+
+                if is_match:
                     passed_count += 1
                     total_passed += 1
                 else:
                     brick_failures.append(f"Test {idx} failed: got {res}, expected {expected}")
             except Exception as e:
-                # التحقق الصارم بـ ValueError بالضبط كما طلبت (بدون قبول أخطاء أخرى عشوائية)
                 if expected == ValueError and type(e) is ValueError:
                     passed_count += 1
                     total_passed += 1
                 else:
-                    brick_failures.append(f"Test {idx} raised unexpected error: {type(e).__name__} - {e}")
+                    brick_failures.append(
+                        f"Test {idx} raised unexpected error: {type(e).__name__} - {e}"
+                    )
 
         status_msg = "نجح بالكامل" if not brick_failures else " | ".join(brick_failures)
         results_summary.append((b_id, passed_count, len(tests), status_msg))
 
-    # طباعة الجدول النهائي
-    print("\n📊 جدول نتائج تدقيق اللبنات المفصل:")
-    print("-" * 60)
-    print(f"{'اللبنة (Brick)':<12} | {'النجاح':<8} | {'الحالة':<35}")
-    print("-" * 60)
-    
+    print("\n📊 جدول نتائج تدقيق اللبنات:")
+    print("-" * 65)
+    print(f"{'اللبنة (Brick)':<12} | {'النجاح':<8} | {'الحالة':<38}")
+    print("-" * 65)
+
     for b_id, passed, total, status in results_summary:
         status_icon = "✅ ناجح" if passed == total else f"❌ جزئي/فشل ({status})"
         print(f"{b_id:<12} | {passed}/{total:<6} | {status_icon}")
 
-    print("-" * 60)
+    print("-" * 65)
     print(f"🎯 النتيجة الإجمالية: {total_passed}/{total_tests} اختبار ناجح.")
-    print("=" * 60)
+    print("=" * 65)
+
 
 if __name__ == "__main__":
     run_impact_audit()
