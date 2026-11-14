@@ -1,0 +1,19 @@
+{
+  "id": "brick-003",
+  "name": "safe_percentage",
+  "description": "كتحسب النسبة المئوية بشكل آمن مع التحقق من الأخطاء، وكتحمل لبنة brick-002.py ديناميكياً عبر importlib",
+  "author": "IMPACT",
+  "reused_brick": "bricks/brick-002.py (safe_divide)",
+  "inputs": {
+    "part": "int/float (الجزء)",
+    "total": "int/float (المجموع)"
+  },
+  "errors_handled": [
+    "ValueError: Values must be numbers",
+    "ValueError: Total cannot be zero",
+    "ValueError: Values cannot be negative",
+    "ValueError: Part cannot be greater than total"
+  ],
+  "tests_passed": "4/4",
+  "status": "verified"
+}
