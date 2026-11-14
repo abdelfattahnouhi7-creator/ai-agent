@@ -1,0 +1,22 @@
+{
+  "id": "brick-006",
+  "name": "safe_total_with_discount",
+  "description": "حساب الثمن النهائي بعد التخفيض باستعمال إعادة التدوير الحقيقية: التنظيف بـ brick-005، وحساب التخفيض بـ brick-003، والقسمة الآمنة بـ brick-002 دون أي حساب يدوي أو مكرر",
+  "author": "IMPACT",
+  "reused_bricks": [
+    "brick-005 (safe_clean_price)",
+    "brick-003 (safe_percentage)",
+    "brick-002 (safe_divide)"
+  ],
+  "inputs": {
+    "raw_price": "str / int / float (الثمن الخام)",
+    "discount_percent": "int / float (نسبة التخفيض)"
+  },
+  "errors_handled": [
+    "ValueError: Invalid price (من brick-005)",
+    "ValueError: Price cannot be negative / Values cannot be negative (من brick-005 أو brick-003)",
+    "ValueError: Part cannot be greater than total (من brick-003 إذا كان التخفيض > 100)"
+  ],
+  "tests_passed": "4/4",
+  "status": "verified"
+}
