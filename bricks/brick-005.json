@@ -1,0 +1,16 @@
+{
+  "id": "brick-005",
+  "name": "safe_clean_price",
+  "description": "تنظيف وتحويل الأثمنة بمختلف الصيغ النصية أو العددية مع تبسيط التعبير المجازي (Regex) ومعالجة الأخطاء والقيم السالبة بدقة دون ضياع نوع الخطأ",
+  "author": "IMPACT",
+  "reused_bricks": [],
+  "inputs": {
+    "raw_price": "str / int / float (الثمن الخام بأي صيغة)"
+  },
+  "errors_handled": [
+    "ValueError: Invalid price (للإدخالات الفارغة، None، أو الحروف غير المفهومة)",
+    "ValueError: Price cannot be negative (للأثمنة السالبة)"
+  ],
+  "tests_passed": "4/4",
+  "status": "verified"
+}
