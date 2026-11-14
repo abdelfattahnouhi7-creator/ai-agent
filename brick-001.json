@@ -1,0 +1,9 @@
+{
+  "id": "brick-001",
+  "name": "ai-agent-fix",
+  "description": "Agent كيجرب الكود، إلا فشل كيصيفطو لـ Gemini يصلحو، وكيعاود حتى ينجح 3/3",
+  "author": "IMPACT",
+  "tests_passed": "add: 3/3, average: 3/3 مع Tests صارمين",
+  "model": "gemini-3.5-flash-lite",
+  "status": "verified"
+}
