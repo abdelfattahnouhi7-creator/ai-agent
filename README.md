@@ -1,21 +1,26 @@
-# IMPACT - الميثاق هو المحقق
+# MY-IMPACT
 
-> **الميثاق هو المحقق الذي يجبر النموذج على إعطاء المعلومة الكاملة و ليس التخمينات.**
+مشروع كيثبت بلي الفائز ماشي اللي كيجيب الكود، الفائز هو اللي كيجيب الدليل.
 
-99% من الناس يستعملون AI هكذا:
-يسألونه و يصدقونه.
+## النتيجة النهائية - 14 نونبر 2026
 
-نحن نستعمله هكذا:
-نسأله و نطلب منه الدليل.
+| الموديل | النتيجة |
+| :--- | :--- |
+| Muse Spark | 4/4 ✅ + |
+| Claude | 4/4 ✅ |
+| ChatGPT | 4/4 ✅ |
+| Gemini | 1/4 ❌ |
 
----
+## agent.py v3 - 6/6 ✅
 
-## المشكلة: AI يخمّن
+جمعنا التنظيف ديال Muse Spark + pytest ديال Claude.
 
-بدون IMPACT، طلبنا من AI أن يبني دالة فاتورة، فأعطانا هذا:
+- كيفهم: `DH` + `MAD` + `درهم` + `د.م`
+- كيرفض: اللائحة الخاوية، الثمن السالب، التخفيض > 100، `None`
+- الاختبارات: `test_agent.py` - 6 tests
 
-```python
-def calculate_total(prices, discount_percentage):
-    subtotal = sum(prices)
-    total = subtotal - (subtotal * discount_percentage / 100)
-    return total
+## كيفاش تجرب؟
+
+```bash
+pip install pytest
+pytest test_agent.py -v
