@@ -1,0 +1,7 @@
+{
+  "id": "brick-002",
+  "name": "safe_divide",
+  "description": "قسمة آمنة - كترفض القسمة على صفر بـ ValueError واضح، ماشي ZeroDivisionError",
+  "tests": "3/3",
+  "status": "verified"
+}
