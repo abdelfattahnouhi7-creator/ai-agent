@@ -1,60 +1,113 @@
+import importlib.util
+from pathlib import Path
 
-import requests
+def load_brick_func(brick_name, func_name):
+    brick_path = Path("bricks") / f"{brick_name}.py"
+    if not brick_path.exists():
+        raise FileNotFoundError(f"الملف {brick_path} غير موجود")
+    spec = importlib.util.spec_from_file_location(brick_name.replace("-", "_"), brick_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return getattr(module, func_name)
 
-GEMINI_KEY = "حط_المفتاح_هنا"
+def run_impact_audit():
+    audit_suite = [
+        {
+            "id": "brick-001",
+            "func_name": "average",
+            "tests": [
+                ({"nums": [10, 20, 30]}, 20.0),
+                ({"nums": [5]}, 5.0),
+                ({"nums": (2, 4, 6)}, 4.0),
+            ]
+        },
+        {
+            "id": "brick-002",
+            "func_name": "safe_divide",
+            "tests": [
+                ({"a": 10, "b": 2}, 5.0),
+                ({"a": 5, "b": 0}, ValueError),
+                ({"a": "10", "b": 2}, ValueError),
+            ]
+        },
+        {
+            "id": "brick-003",
+            "func_name": "safe_percentage",
+            "tests": [
+                ({"part": 25, "total": 100}, 25.0),
+                ({"part": 10, "total": 0}, ValueError),
+                ({"part": 120, "total": 100}, ValueError),
+                ({"part": -5, "total": 100}, ValueError),
+            ]
+        },
+        {
+            "id": "brick-004",
+            "func_name": "safe_average_percentage",
+            "tests": [
+                ({"scores": [80, 90, 100]}, 90.0),
+                ({"scores": []}, ValueError),
+                ({"scores": [110, 120]}, ValueError),
+                ({"scores": [-20, 10]}, ValueError),
+            ]
+        }
+    ]
 
-MODELS = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-flash-latest"]
+    total_passed = 0
+    total_tests = 0
+    results_summary = []
 
-def ask_llm_real(code, failures):
-    prompt = f"Fix this Python code. Return only code.\n{code}\nFailures: {failures}"
-    headers = {"x-goog-api-key": GEMINI_KEY, "Content-Type": "application/json"}
-    for model in MODELS:
+    print("=" * 60)
+    print("🚀 بدء نظام تدقيق وتشغيل اللبنات (IMPACT Audit System - V2)")
+    print("=" * 60)
+
+    for brick in audit_suite:
+        b_id = brick["id"]
+        f_name = brick["func_name"]
+        tests = brick["tests"]
+        
+        passed_count = 0
+        brick_failures = []
+
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-            r = requests.post(url, headers=headers, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=30)
-            data = r.json()
-            if "error" in data:
-                continue
-            text = data["candidates"][0]["content"]["parts"][0]["text"]
-            return text.replace("```python", "").replace("```", "").strip(), f"Gemini صلح الكود بـ {model}"
-        except:
+            func = load_brick_func(b_id, f_name)
+        except Exception as e:
+            results_summary.append((b_id, 0, len(tests), [f"فشل في التحميل: {e}"]))
+            total_tests += len(tests)
             continue
-    return code, "كل الموديلات فشلو"
 
-ask_llm_to_fix = ask_llm_real
-
-def agent_fix(code, func_name):
-    import io, contextlib
-    for attempt in range(1, 4):
-        print(f"\n--- محاولة {attempt}/3 ---")
-        # هنا كيجرب 3 Tests ديالك
-        tests = [(5, 3, 8), ("a", "a", "error"), (0, 0, 0)]
-        passed = 0
-        failures = ""
-        for a, b, expected in tests:
+        for idx, (kwargs, expected) in enumerate(tests, 1):
+            total_tests += 1
             try:
-                ns = {}
-                exec(code, ns)
-                res = ns[func_name](a, b)
-                if res == expected or (expected == "error" and False):
-                    passed += 1
+                res = func(**kwargs)
+                if res == expected:
+                    passed_count += 1
+                    total_passed += 1
                 else:
-                    failures += f"add({a},{b}) = {res}, expected {expected}\n"
+                    brick_failures.append(f"Test {idx} failed: got {res}, expected {expected}")
             except Exception as e:
-                if expected == "error":
-                    passed += 1
+                # التحقق الصارم بـ ValueError بالضبط كما طلبت (بدون قبول أخطاء أخرى عشوائية)
+                if expected == ValueError and type(e) is ValueError:
+                    passed_count += 1
+                    total_passed += 1
                 else:
-                    failures += f"add({a},{b}) error: {e}\n"
-        print(f"نجحو {passed}/3")
-        if passed == 3:
-            print("🎉 مجرب ✅")
-            return code, "نجح"
-        code, msg = ask_llm_to_fix(code, failures)
-        print(f"🔧 الإصلاح: {msg}")
-    return code, "فشل"
+                    brick_failures.append(f"Test {idx} raised unexpected error: {type(e).__name__} - {e}")
+
+        status_msg = "نجح بالكامل" if not brick_failures else " | ".join(brick_failures)
+        results_summary.append((b_id, passed_count, len(tests), status_msg))
+
+    # طباعة الجدول النهائي
+    print("\n📊 جدول نتائج تدقيق اللبنات المفصل:")
+    print("-" * 60)
+    print(f"{'اللبنة (Brick)':<12} | {'النجاح':<8} | {'الحالة':<35}")
+    print("-" * 60)
+    
+    for b_id, passed, total, status in results_summary:
+        status_icon = "✅ ناجح" if passed == total else f"❌ جزئي/فشل ({status})"
+        print(f"{b_id:<12} | {passed}/{total:<6} | {status_icon}")
+
+    print("-" * 60)
+    print(f"🎯 النتيجة الإجمالية: {total_passed}/{total_tests} اختبار ناجح.")
+    print("=" * 60)
 
 if __name__ == "__main__":
-    broken = "def add(a, b):\n    return a * b"
-    fixed, _ = agent_fix(broken, "add")
-    print("\n--- الكود النهائي ---")
-    print(fixed)
+    run_impact_audit()
