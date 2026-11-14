@@ -1,0 +1,20 @@
+{
+  "id": "agent-orchestrator",
+  "name": "IMPACT Agent Runner & Auditor",
+  "description": "وكيل مركزي لتحميل واختبار جميع اللبنات (brick-001 إلى brick-004) بشكل متسلسل ودقيق مع التقاط أخطاء ValueError الصارمة وإكمال جميع الاختبارات دون توقف",
+  "author": "IMPACT",
+  "bricks_managed": [
+    "brick-001 (average)",
+    "brick-002 (safe_divide)",
+    "brick-003 (safe_percentage)",
+    "brick-004 (safe_average_percentage)"
+  ],
+  "total_bricks": 4,
+  "total_tests": 14,
+  "validation_rules": [
+    "عدم إيقاف الاختبارات عند أول خطأ (No Break Policy)",
+    "التحقق الصارم من نوع الخطأ type(e) == ValueError",
+    "التوثيق الفوري في جدول تفصيلي"
+  ],
+  "status": "verified"
+}
